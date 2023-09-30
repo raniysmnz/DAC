@@ -1,6 +1,6 @@
 ---
 title: "Untitled"
-author: "Rani Yasmin Azzahra"
+author: "Rani Yasmin Azzahra "
 date: "2023-09-30"
 output: html_document
 ---
