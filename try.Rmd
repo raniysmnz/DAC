@@ -1,0 +1,122 @@
+---
+title: "Untitled"
+author: "Rani Yasmin Azzahra"
+date: "2023-09-30"
+output: html_document
+---
+## Library
+```{r}
+library(dplyr)
+library(ggplot2)
+library(skimr)
+library(DataExplorer)
+library(RColorBrewer)
+```
+
+## Input Data Train
+```{r}
+train <- read.csv("https://raw.githubusercontent.com/raniysmnz/DAC/main/DataTrain_Preliminary.csv", header=TRUE, sep=";")
+str(train)
+```
+## Cleaning Data
+### Fix data type
+```{r}
+#set data type as factor
+factor.col <- c("protocol_type", "service", "flag", "land", "logged_in", "root_shell", "su_attempted", "is_host_login", "is_guest_login", "type_of_attack")
+train[factor.col] <- lapply(train[factor.col], as.factor)
+
+#set data type as numeric
+num.col <- setdiff(names(train), factor.col)
+train[num.col] <- lapply(train[num.col], as.numeric)
+
+str(train)
+```
+### Remove missing values and unusual data
+The dataset is large enough to remove missing values and unusual data without imputation.
+```{r}
+#check missing values and summary of data
+skim(train)
+```
+
+```{r}
+#function to make an column is binary only
+convert.bin <- function(column) {
+  column[column != 0 & column != 1] <- NA
+  return(column)
+}
+#list of binary columns
+factor.b.col <- c("land", "logged_in", "root_shell", "su_attempted", "is_host_login", "is_guest_login")
+#apply function to binary columns
+train[factor.b.col] <- lapply(train[factor.b.col], convert.bin)
+```
+
+```{r}
+#set unusual data as NA
+train[train == "*"] <- NA
+train[train == "99999"] <- NA
+train[train == ""] <- NA
+train[train == "#NA"] <- NA
+```
+
+```{r}
+# remove NA data
+train <- na.omit(train)
+str(train)
+skim(train)
+```
+
+## Exploration and Visualize Data
+### Distribution of Type of Attack
+```{r}
+ta.plot <-
+  ggplot(train, aes(y=type_of_attack, fill=type_of_attack)) +
+  geom_bar()+
+  scale_fill_brewer(palette = "Set3")+
+  labs(title="Type of Attack Distribution")+
+  theme(plot.title = element_text(hjust = 0.5))
+ta.plot
+```
+### Distribution of Protocol Type
+```{r}
+protocoltype.plot <-
+  ggplot(train, aes(y=protocol_type, fill=protocol_type)) +
+  geom_bar()+
+  scale_fill_brewer(palette = "Set3")+
+  labs(title="Protocol Type Distribution")+
+  theme(plot.title = element_text(hjust = 0.5))
+protocoltype.plot
+```
+### Distribution of Flag Type
+```{r}
+flag.plot <-
+  ggplot(train, aes(y=flag, fill=flag)) +
+  geom_bar()+
+  scale_fill_brewer(palette = "Set3")+
+  labs(title="Flag Type Distribution")+
+  theme(plot.title = element_text(hjust = 0.5))
+flag.plot
+```
+### Density Plot for Numeric Variables
+```{r}
+int.density <-
+  plot_density(train[num.col])
+```
+
+## Ordinal Logistic Regression
+### Modelling
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
