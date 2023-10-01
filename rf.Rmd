@@ -1,0 +1,77 @@
+---
+title: "randomforest"
+author: "Rani Yasmin Azzahra"
+date: "2023-10-01"
+output: html_document
+---
+
+## Input Data Train
+```{r}
+train.df <- read.csv("https://raw.githubusercontent.com/raniysmnz/DAC/main/DataTrain_Preliminary.csv", header=TRUE, sep=";")
+str(train.df)
+```
+
+## Data Preprocessing
+#check missing values and summary of data
+```{r}
+skim(train.df)
+```
+
+```{r}
+#function to make an column is binary only
+convert.bin <- function(column) {
+  column[column != 0 & column != 1] <- NA
+  return(column)
+}
+#list of binary columns
+factor.b.col <- c("land", "logged_in", "root_shell", "su_attempted", "is_host_login", "is_guest_login")
+#apply function to binary columns
+train.df[factor.b.col] <- lapply(train.df[factor.b.col], convert.bin)
+```
+
+```{r}
+#set unusual data as NA
+train.df[train.df == "*"] <- NA
+train.df[train.df == "99999"] <- NA
+train.df[train.df == ""] <- NA
+train.df[train.df == "#NA"] <- NA
+```
+
+```{r}
+#set data type as factor
+##numeric data that contain only 2 unique number are set as factor
+factor.col <- c("protocol_type", "service", "flag", "urgent", "land", "logged_in", "root_shell", "su_attempted", "is_host_login", "is_guest_login", "type_of_attack", "num_shells", "serror_rate", "srv_serror_rate", "rerror_rate", "srv_rerror_rate", "same_srv_rate", "srv_diff_host_rate", "dst_host_srv_diff_host_rate", "dst_host_srv_serror_rate", "dst_host_rerror_rate", "dst_host_srv_rerror_rate", "diff_srv_rate", "num_outbound_cmds")
+train.df[factor.col] <- lapply(train.df[factor.col], as.factor)
+
+#set data type as numeric
+num.col <- setdiff(names(train.df), factor.col)
+train.df[num.col] <- lapply(train.df[num.col], as.numeric)
+```
+
+```{r}
+skim(train.df)
+```
+
+### Imputation for NA Values except "service" 
+```{r}
+# remove NA Values for service column
+train.df$service <- na.omit(train.df$service)
+
+# impute NA values except "service"
+library(randomForest)
+set.seed(206)
+train.df <- train %>% dplyr::select( -service)
+train.df.imputed <- rfImpute(type_of_attack ~ ., train.df)
+
+# complete data 
+train.df.imputed <- cbind(train.df.imputed,train.df$service)
+```
+
+```{r}
+classifier_RF <- randomForest(type_of_attack ~ ., data=train.df.imputed, ntree=500)
+classifier_RF
+```
+
+
+
+
