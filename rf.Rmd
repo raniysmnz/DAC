@@ -14,7 +14,7 @@ str(train.df)
 ## Data Preprocessing
 #check missing values and summary of data
 ```{r}
-skim(train.df)
+skimr::skim(train.df)
 ```
 
 ```{r}
@@ -49,22 +49,22 @@ train.df[num.col] <- lapply(train.df[num.col], as.numeric)
 ```
 
 ```{r}
-skim(train.df)
+skimr::skim(train.df)
 ```
 
 ### Imputation for NA Values except "service" 
 ```{r}
 # remove NA Values for service column
-train.df$service <- na.omit(train.df$service)
+sevice.cl <- na.omit(train.df$service)
 
 # impute NA values except "service"
 library(randomForest)
 set.seed(206)
-train.df <- train %>% dplyr::select( -service)
-train.df.imputed <- rfImpute(type_of_attack ~ ., train.df)
+train.df.imputed <- train %>% dplyr::select( -service)
+train.df.imputed <- rfImpute(type_of_attack ~ ., train.df.imputed)
 
 # complete data 
-train.df.imputed <- cbind(train.df.imputed,train.df$service)
+train.df.imputed <- cbind(train.df.imputed,train.df$service.cl)
 ```
 
 ```{r}
