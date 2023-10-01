@@ -4,13 +4,17 @@ author: "Rani Yasmin Azzahra "
 date: "2023-09-30"
 output: html_document
 ---
-## Library
+## Packages
 ```{r}
 library(dplyr)
 library(ggplot2)
 library(skimr)
 library(DataExplorer)
 library(RColorBrewer)
+library(tidyverse)
+
+library(VGAM)
+library(rms)
 ```
 
 ## Input Data Train
@@ -18,19 +22,7 @@ library(RColorBrewer)
 train <- read.csv("https://raw.githubusercontent.com/raniysmnz/DAC/main/DataTrain_Preliminary.csv", header=TRUE, sep=";")
 str(train)
 ```
-## Cleaning Data
-### Fix data type
-```{r}
-#set data type as factor
-factor.col <- c("protocol_type", "service", "flag", "land", "logged_in", "root_shell", "su_attempted", "is_host_login", "is_guest_login", "type_of_attack")
-train[factor.col] <- lapply(train[factor.col], as.factor)
-
-#set data type as numeric
-num.col <- setdiff(names(train), factor.col)
-train[num.col] <- lapply(train[num.col], as.numeric)
-
-str(train)
-```
+## Data Preprocessing
 ### Remove missing values and unusual data
 The dataset is large enough to remove missing values and unusual data without imputation.
 ```{r}
@@ -61,6 +53,30 @@ train[train == "#NA"] <- NA
 ```{r}
 # remove NA data
 train <- na.omit(train)
+```
+
+### Fix data type
+```{r}
+#check unique values for each variable
+lapply(train, unique)
+```
+
+
+```{r}
+#set data type as factor
+##numeric data that contain only 2 unique number are set as factor
+factor.col <- c("protocol_type", "service", "flag", "urgent", "land", "logged_in", "root_shell", "su_attempted", "is_host_login", "is_guest_login", "type_of_attack", "num_shells", "serror_rate", "srv_serror_rate", "rerror_rate", "srv_rerror_rate", "same_srv_rate", "srv_diff_host_rate", "dst_host_srv_diff_host_rate", "dst_host_srv_serror_rate", "dst_host_rerror_rate", "dst_host_srv_rerror_rate")
+train[factor.col] <- lapply(train[factor.col], as.factor)
+
+#remove "is_host_login", "diff_srv_rate", "num_outbound_cmds" column as the cleaned data just have one type of its category
+train <- train %>% dplyr::select( -is_host_login, -diff_srv_rate, -num_outbound_cmds)
+
+#set data type as numeric
+num.col <- setdiff(names(train), factor.col)
+train[num.col] <- lapply(train[num.col], as.numeric)
+```
+
+```{r}
 str(train)
 skim(train)
 ```
@@ -76,6 +92,7 @@ ta.plot <-
   theme(plot.title = element_text(hjust = 0.5))
 ta.plot
 ```
+
 ### Distribution of Protocol Type
 ```{r}
 protocoltype.plot <-
@@ -105,8 +122,18 @@ int.density <-
 ## Ordinal Logistic Regression
 ### Modelling
 ```{r}
+library(nnet)
+# Since we are going to use Academic as the reference group, we need relevel the group.
+train$type_of_attack <- relevel(as.factor(train$type_of_attack), ref = "normal")
 
+# Run a "only intercept" model
+incept.multilog.reg <- multinom(type_of_attack ~ ., data = train)
+
+# 
+multilog.reg <- multinom(type_of_attack ~ ., data = train, model=TRUE)
+#summary(multilog.reg)
 ```
+
 
 
 
