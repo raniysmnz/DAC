@@ -70,6 +70,7 @@ train.df.imputed <- cbind(train.df.imputed,train.df$service)
 ```{r}
 classifier_RF <- randomForest(type_of_attack ~ ., data=train.df.imputed, ntree=500)
 classifier_RF
+
 ```
 
 
